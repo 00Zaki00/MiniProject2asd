@@ -1,0 +1,244 @@
+import math
+from prettytable import PrettyTable
+
+class Node:
+    def __init__(self, kode, merk, tipe, harga, stok):
+        self.kode = kode
+        self.merk = merk
+        self.tipe = tipe
+        self.harga = harga
+        self.stok = stok
+        self.next = None
+
+class TokoLaptop:
+    def __init__(self):
+        self.head = None
+
+    def tambah_laptop(self, kode, merk, tipe, harga, stok):
+        new_laptop = Node(kode, merk, tipe, harga, stok)
+        new_laptop.next = self.head
+        self.head = new_laptop
+        print(f"Laptop {merk} {tipe} berhasil ditambahkan.")
+
+    def ubah_laptop(self, kode, field, nilai_baru):
+        current = self.head
+        found = False
+
+        while current:
+            if current.kode == kode:
+                if hasattr(current, field):
+                    setattr(current, field, nilai_baru)
+                    print(f"Data {field} untuk laptop dengan kode {kode} berhasil diubah.")
+                    found = True
+                    break
+                else:
+                    print(f"Field {field} tidak valid.")
+                    break
+
+            current = current.next
+
+        if not found:
+            print(f"Laptop dengan kode {kode} tidak ditemukan.")
+
+    def hapus_laptop(self, kode):
+        current = self.head
+        previous = None
+        found = False
+
+        while current:
+            if current.kode == kode:
+                if previous:
+                    previous.next = current.next
+                else:
+                    self.head = current.next
+
+                print(f"Laptop dengan kode {kode} berhasil dihapus.")
+                found = True
+                break
+
+            previous = current
+            current = current.next
+
+        if not found:
+            print(f"Laptop dengan kode {kode} tidak ditemukan.")
+
+    def lihat_semua_laptop(self):
+        laptops = self.get_laptops_as_list()
+
+        if not laptops:
+            print("Tidak ada laptop yang tersedia.")
+            return
+
+        table = PrettyTable()
+        table.field_names = ["Kode", "Merk", "Tipe", "Harga", "Stok"]
+
+        for laptop in laptops:
+            table.add_row([laptop.kode, laptop.merk, laptop.tipe, laptop.harga, laptop.stok])
+
+        print("Daftar Semua Laptop:")
+        print(table)
+
+    def quick_sort(self, arr, ascending, sort_by):
+        if len(arr) <= 1:
+            return arr
+        else:
+            pivot = arr[0]
+            less = [x for x in arr[1:] if getattr(x, sort_by) < getattr(pivot, sort_by)]
+            greater = [x for x in arr[1:] if getattr(x, sort_by) >= getattr(pivot, sort_by)]
+
+            if ascending:
+                return self.quick_sort(less, ascending, sort_by) + [pivot] + self.quick_sort(greater, ascending, sort_by)
+            else:
+                return self.quick_sort(greater, ascending, sort_by) + [pivot] + self.quick_sort(less, ascending, sort_by)
+
+    def sort_laptops(self, ascending, sort_by):
+        if sort_by not in ["kode", "merk", "tipe", "harga", "stok"]:
+            print("Atribut untuk mengurutkan tidak valid.")
+            return
+
+        laptops = self.get_laptops_as_list()
+        sorted_laptops = self.quick_sort(laptops, ascending, sort_by)
+        self.display_sorted_laptops(sorted_laptops)
+
+    def get_laptops_as_list(self):
+        laptops = []
+        current = self.head
+        while current:
+            laptops.append(current)
+            current = current.next
+        return laptops
+
+    def display_sorted_laptops(self, laptops):
+        if not laptops:
+            print("Tidak ada laptop yang tersedia.")
+            return
+
+        table = PrettyTable()
+        table.field_names = ["Kode", "Merk", "Tipe", "Harga", "Stok"]
+
+        for laptop in laptops:
+            table.add_row([laptop.kode, laptop.merk, laptop.tipe, laptop.harga, laptop.stok])
+
+        print("Daftar Laptop setelah diurutkan:")
+        print(table)
+
+    def jump_search(self, arr, x, search_by):
+        n = len(arr)
+
+        # Mencari ukuran langkah
+        step = int(math.sqrt(n))
+
+        # Inisialisasi pointer
+        prev = 0
+        while arr[min(step, n) - 1].__dict__[search_by] < x:
+            prev = step
+            step += int(math.sqrt(n))
+            if prev >= n:
+                return -1
+
+        # Melakukan linear search untuk mencari elemen
+        while arr[prev].__dict__[search_by] < x:
+            prev += 1
+            if prev == min(step, n):
+                return -1
+
+        if arr[prev].__dict__[search_by] == x:
+            return prev
+
+        return -1
+
+    def cari_laptop(self, value, search_by):
+        laptops = self.get_laptops_as_list()
+        laptops_sorted_by_search = self.quick_sort(laptops, True, search_by)
+
+        result_index = self.jump_search(laptops_sorted_by_search, value, search_by)
+
+        if result_index != -1:
+            print("Laptop ditemukan:")
+            self.display_laptop(laptops_sorted_by_search[result_index])
+        else:
+            print(f"Laptop dengan {search_by} {value} tidak ditemukan.")
+
+    def menu(self):
+        while True:
+            print("\nMenu:")
+            print("1. Tambah Laptop")
+            print("2. Ubah Laptop")
+            print("3. Hapus Laptop")
+            print("4. Lihat Semua Laptop")
+            print("5. Urutkan Laptop")
+            print("6. Cari Laptop")
+            print("0. Keluar")
+
+            choice = input("Pilih menu (0-6): ")
+
+            if choice == '1':
+                kode = input("Masukkan kode laptop: ")
+                merk = input("Masukkan merk laptop: ")
+                tipe = input("Masukkan tipe laptop: ")
+                harga_input = input("Masukkan harga laptop: ")
+                stok_input = input("Masukkan stok laptop: ")
+
+                # Validasi input kosong untuk harga dan stok
+                if harga_input.strip() == '' or stok_input.strip() == '':
+                    print("Harga atau stok tidak boleh kosong.")
+                    continue
+
+                # Konversi input menjadi integer setelah validasi
+                harga = int(harga_input)
+                stok = int(stok_input)
+
+                self.tambah_laptop(kode, merk, tipe, harga, stok)
+
+            elif choice == '2':
+                kode = input("Masukkan kode laptop: ")
+                field = input("Masukkan field yang ingin diubah (merk/tipe/harga/stok): ")
+                nilai_baru = input("Masukkan nilai baru: ")
+                self.ubah_laptop(kode, field, nilai_baru)
+
+            elif choice == '3':
+                kode = input("Masukkan kode laptop yang ingin dihapus: ")
+                self.hapus_laptop(kode)
+
+            elif choice == '4':
+                self.lihat_semua_laptop()
+
+            elif choice == '5':
+                sort_by = input("Masukkan atribut untuk mengurutkan (kode/merk/tipe/harga/stok): ")
+                if sort_by not in ["kode", "merk", "tipe", "harga", "stok"]:
+                    print("Atribut untuk mengurutkan tidak valid.")
+                    continue
+                order = input("Pilih urutan sorting (ascending/descending): ").lower()
+                ascending = True if order == 'ascending' else False
+                self.sort_laptops(ascending, sort_by)
+
+            elif choice == '6':
+                search_by = input("Masukkan atribut untuk mencari (kode/merk/tipe/harga/stok): ")
+                if search_by not in ["kode", "merk", "tipe", "harga", "stok"]:
+                    print("Atribut untuk mencari tidak valid.")
+                    continue
+                value = input(f"Masukkan nilai {search_by} yang ingin dicari: ")
+                self.cari_laptop(value, search_by)
+
+            elif choice == '0':
+                print("Program selesai.")
+                break
+
+            else:
+                print("Pilihan tidak valid. Silakan masukkan pilihan yang benar.")
+
+    def display_laptop(self, laptop):
+        table = PrettyTable()
+        table.field_names = ["Field", "Value"]
+        for key, value in laptop.__dict__.items():
+            table.add_row([key.capitalize(), value])
+        print(f"Detail Laptop {laptop.kode}:\n{table}")
+
+# Contoh penggunaan
+toko_laptop = TokoLaptop()
+
+toko_laptop.tambah_laptop('1', 'Asus', 'ROG Strix', 15000000, 10)
+toko_laptop.tambah_laptop('2', 'Dell', 'Inspiron', 8000000, 15)
+toko_laptop.tambah_laptop('3', 'Acer', 'Nitro 5', 18000000, 3)
+
+toko_laptop.menu()
